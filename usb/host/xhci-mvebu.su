@@ -1,0 +1,4 @@
+xhci-mvebu.c:111:12:xhci_usb_ofdata_to_platdata	32	static
+xhci-mvebu.c:80:12:xhci_usb_remove	64	static
+xhci-mvebu.c:38:12:board_xhci_enable	0	static
+xhci-mvebu.c:43:12:xhci_usb_probe	80	static

@@ -1,0 +1,7 @@
+r8152_fw.c:802:13:r8153_wdt1_end	32	static
+r8152_fw.c:724:13:rtl_clear_bp	32	static
+r8152_fw.c:741:13:r8153_clear_bp	32	static
+r8152_fw.c:761:12:r8153_pre_ram_code	48	static
+r8152_fw.c:781:12:r8153_post_ram_code	32	static
+r8152_fw.c:813:6:r8152b_firmware	48	static
+r8152_fw.c:856:6:r8153_firmware	48	static

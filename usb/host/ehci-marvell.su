@@ -1,0 +1,3 @@
+ehci-marvell.c:80:13:marvell_ehci_powerup_fixup	32	static
+ehci-marvell.c:103:12:ehci_mvebu_probe	64	static
+ehci-marvell.c:158:12:ehci_usb_remove	64	static
