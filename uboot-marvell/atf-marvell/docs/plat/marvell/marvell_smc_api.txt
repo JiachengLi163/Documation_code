@@ -1,0 +1,145 @@
+MARVELL
+======
+
+ARM Trusted Firmware MARVELL SMC interface
+=========================================
+
+This document purpose is to describe Marvell-specific SMC runtime services, which
+creates runtime interface for non-secure firmware/OS. Describing standard ARM
+PSCI services is out of the scope of this paper. More information about these
+can be found at [PSCI]. To read more about SMCs, there is specification called
+[SMC Calling Convention][SMCCC].
+
+
+Version 1.0
+-----------
+As for version 1.0, following Marvell's services are available:
+
+1. OCTEONTX_SVC_CALL_COUNT
+
+  * SMC_FID: 0xc200ff00
+  * Input registers values:
+    - x0: SMC_FID
+  * Return value (x0):
+    - Number of implemented Service Calls
+  * Description:
+    This call returns number of currently implemented Marvell's runtime services.
+  * Supported platforms: T81, T83, F95, T96
+
+2. OCTEONTX_SVC_UID
+
+  * SMC FID: 0xc200ff01
+  * Input registers values:
+    - x0: SMC_FID
+  * Return value (x0):
+    - Marvell OEM Service UUID
+  * Description:
+    This call returns Marvell OEM Service UUID
+  * Supported platforms: T81, T83, F95, T96
+
+3. OCTEONTX_SVC_VERSION
+
+  * SMC FID: 0xc200ff03
+  * Input registers values:
+    - x0: SMC_FID
+  * Return value:
+    - x0: SMC version 32-bit major number
+    - x1: SMC version 32-bit minor number
+  * Description:
+    This call returns major and minor version numbers of current Marvell runtime
+    services implementation. Different major revision values indicates possibly
+    incompatible SMC APIs. For two revisions, A and B, for which the major
+    revision values are identical, if the minor revision value of revision B is
+    greater than the minor revision value of revision A, then every SMC in the
+    affected range that works in revision A must also work in revision B.
+    Major revision number is incremented when:
+    * Any SMC call is removed
+    * Updates which aren't backward compatible are made
+    Minor revision number is incremented when:
+    * Any SMC call is added
+    * Backwards compatible changes are made to existing function arguments
+  * Supported platforms: T81, T83, F95, T96
+
+4. OCTEONTX_DRAM_SIZE
+
+  * SMC FID: 0xc2000301
+  * Input registers values:
+    - x0: SMC_FID
+    - x1: Number of NUMA node to check size of DRAM
+  * Return value (x0):
+    - Return size of DRAM in bytes
+  * Description:
+    This call returns size of DRAM in bytes for specified by caller NUMA node.
+  * Supported platforms: T81, T83, F95, T96
+
+5. OCTEONTX_NODE_COUNT
+
+  * SMC FID: 0xc2000601
+  * Input registers values:
+    - x0: SMC_FID
+  * Return value (x0):
+    - Number of NUMA nodes available in system
+  * Description:
+    This call returns number of NUMA nodes in system.
+  * Supported platforms: T81, T83, F95, T96
+
+6. OCTEONTX_INSTALL_GPIO_INT
+
+  * SMC FID: 0xc2000801
+  * Input registers values:
+    - x0: SMC_FID
+    - x1: gpio number
+    - x2: stack pointer
+    - x3: cpu
+    - x4: isr handler address
+  * Return value (x0):
+    - Non-zero value indicates that interrupt cannot be installed
+  * Description:
+    This call allows to enable interrupt for specified gpio number that will be
+    handled on selected cpu. Isr handler address is user space handler called on
+    interrupt. The handler will use specified stack pointer. In x0 register
+    the gpio number will be passed to the handler.
+  * Supported platforms: T83, F95, T96
+
+7. OCTEONTX_REMOVE_GPIO_INT
+
+  * SMC FID: 0xc2000802
+  * Input registers values:
+    - x0: SMC_FID
+    - x1: gpio number
+  * Return value (x0):
+    - Always zero
+  * Description:
+    This call allows to disable interrupt on specified gpio number that was
+    previously setup by OCTEONTX_INSTALL_GPIO_INT SMC.
+  * Supported platforms: T83, F95, T96
+
+8. OCTEONTX_PUTC
+
+  * SMC FID: 0xc2000a01
+  * Input registers values:
+    - x0: SMC_FID
+    - x1: character to print
+  * Return value: N/A
+  * Description:
+    This call allows to put single character on console. It's especially useful
+    for debug purposes.
+  * Supported platforms: T81, T83, F95, T96
+
+9. OCTEONTX_DISABLE_RVU_LFS
+
+  * SMC FID: 0xc2000b01
+  * Input registers values:
+    - x0: SMC_FID
+    - x1: node number
+  * Return value (x0):
+    - Always zero
+  * Description:
+    This call can be used to disable NPA/NIX LFs to PFs mapping configured by
+    ARM-TF. Node number is for scalability with future octeontx2 SoC revisions.
+  * Supported platforms: F95, T96
+
+- - - - - - - - - - - - - - - - - - - - -
+
+[PSCI]:    http://infocenter.arm.com/help/topic/com.arm.doc.den0022d/Power_State_Coordination_Interface_PDD_v1_1_DEN0022D.pdf
+[SMCCC]:   http://infocenter.arm.com/help/topic/com.arm.doc.den0028b/ARM_DEN0028B_SMC_Calling_Convention.pdf

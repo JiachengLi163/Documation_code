@@ -1,0 +1,452 @@
+/*
+ * Copyright (C) 2016 Marvell International Ltd.
+ *
+ * SPDX-License-Identifier:	GPL-2.0
+ * https://spdx.org/licenses
+ */
+
+#include "armada-80x0-db.dtsi" /* include SoC device tree */
+
+/ {
+	model = "Marvell Armada 8040 MACCHIATOBin";
+	compatible = "marvell,armada8040-mcbin",
+		     "marvell,armada8040";
+
+	chosen {
+		stdout-path = "serial0:115200n8";
+	};
+
+	aliases {
+		spi0 = &cp1_spi1;
+		gpio0 = &ap_gpio0;
+		gpio1 = &cp1_gpio0;
+		gpio2 = &cp0_gpio1;
+		ethernet0 = &cp0_eth0;
+		ethernet1 = &cp0_eth1;
+		ethernet2 = &cp0_eth2;
+		ethernet3 = &cp1_eth0;
+		ethernet4 = &cp1_eth1;
+		ethernet5 = &cp1_eth2;
+		i2c0 = &cp0_i2c0;
+		i2c1 = &cp0_i2c1;
+		i2c2 = &cp1_i2c1;
+	};
+
+	memory@00000000 {
+		device_type = "memory";
+		reg = <0x0 0x0 0x0 0x80000000>;
+	};
+
+	cp1 {
+		config-space {
+			cp1_reg_usb3_current_limiter0:cp1_usb3_current_limiter@0 {
+				compatible = "regulator-fixed";
+				regulator-min-microamp = <900000>;
+				regulator-max-microamp = <900000>;
+				regulator-force-boot-off;
+				gpio = <&cp1_gpio0 1 GPIO_ACTIVE_HIGH>;
+			};
+		};
+	};
+};
+
+/* Accessible over the mini-USB CON9 connector on the main board */
+&uart0 {
+	status = "okay";
+};
+
+&ap_hd_efuse0 {
+	status = "disabled";
+};
+
+&ap_ld_efuse0 {
+	status = "disabled";
+};
+
+&ap_ld_efuse1 {
+	status = "disabled";
+};
+
+&ap_pinctl {
+	/*
+	 * MPP Bus:
+	 * eMMC [0-5]		value 1
+	 * TPM_RST/PIRQ	gpio	value 0
+	 * UART0 [11,19]	value 3
+	 */
+		  /* 0 1 2 3 4 5 6 7 8 9 */
+	pin-func = < 1 1 1 1 1 1 0 0 0 0
+		     0 3 0 0 0 0 0 0 0 3 >;
+
+	ap_emmc_4bit_pins: emmc-4_bit_pins-0 {
+                marvell,pins = < 0 1 2 3 4 5 >;
+                marvell,function = <1>;
+        };
+};
+
+/* SD MPP[5:0] */
+&ap_sdhci0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&ap_emmc_4bit_pins>;
+	bus-width = <4>;
+	cd-gpios = <&cp0_gpio1 1 GPIO_ACTIVE_LOW>;
+	status = "okay";
+};
+
+&cp0_pinctl {
+	/*
+	 * MPP Bus:
+	 * [0-31] = 0xff: Keep default CP0_shared_pins:
+	 * [32 34] MDIO  	value 7
+	 * [33] SD Card Detect	value 0
+	 * [35-36] I2C1		value 2
+	 * [36-37] I2C0		value 2
+	 * [39-44] leds		value 0
+	 * [47-50] spi1		value 5
+	 * [51-53] sfp led tx	value 0
+	 * [54-55] NCT		value 0
+	 * [56-61] EMMC		value 0xE
+	 * [62] EMMC Reset Pin	value 0
+	 */
+		/*   0    1    2    3    4    5    6    7    8    9 */
+	pin-func = < 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff
+		     0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff
+		     0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff
+		     0xff 0    7    0    7    2    2    2    2    0
+		     0    0    0    0    0    0    0    5    5    5
+		     5    0    0    0    0    0    0xe  0xe  0xe  0xe
+		     0xe  0xe  0 >;
+
+	cp0_mdio_pins: cp0-mdio-pins {
+		marvell,pins = < 32 34 >;
+		marvell,function = <7>;
+	};
+
+	cp0_ap_sd_detect_pins: cp0-ap-sd-detect-pins {
+		marvell,pins = < 33 >;
+		marvell,function = <0>;
+	};
+
+	cp0_leds_pins: cp0-leds-pins {
+		marvell,pins = < 39 40 41 42 43 44 >;
+		marvell,function = <0>;
+	};
+
+	cp0_spi1_pins: cp0-spi1-pins {
+		marvell,pins = < 47 48 49 50 >;
+		marvell,function = <5>;
+	};
+};
+
+&cp0_gpio0 {
+	status = "disabled";
+};
+
+/* on-board emmc */
+&cp0_sdhci0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&cp0_sdhci_pins>;
+	bus-width= <4>;
+	mmc-hs200-1_8v;
+	non-removable;
+	status = "okay";
+};
+
+/* PCIe x4 */
+&cp0_pcie0 {
+	num-lanes = <4>;
+	status = "disabled";
+};
+
+&cp0_i2c0 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&cp0_i2c0_pins>;
+	status = "okay";
+	clock-frequency = <100000>;
+};
+
+&cp0_i2c1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&cp0_i2c1_pins>;
+	status = "okay";
+	clock-frequency = <100000>;
+};
+
+&cp0_sata0 {
+	status = "okay";
+};
+
+&cp0_ld_efuse0 {
+	status = "disabled";
+};
+
+&cp0_ld_efuse1 {
+	status = "disabled";
+};
+
+&cp0_comphy {
+	/*
+	 * CP0 Serdes Configuration:
+	 * Lane 0: SATA1
+	 * Lane 1: SGMII2
+	 * Lane 2: USB0
+	 * Lane 3: SGMII1
+	 * Lane 4: SGMII0
+	 * Lane 5: unused
+	 */
+	phy0 {
+		phy-type = <COMPHY_TYPE_SATA1>;
+	};
+	phy1 {
+		phy-type = <COMPHY_TYPE_SGMII2>;
+		phy-speed = <COMPHY_SPEED_1_25G>;
+	};
+	phy2 {
+		phy-type = <COMPHY_TYPE_USB3_HOST0>;
+	};
+	phy3 {
+		phy-type = <COMPHY_TYPE_SGMII1>;
+		phy-speed = <COMPHY_SPEED_1_25G>;
+	};
+	phy4 {
+		phy-type = <COMPHY_TYPE_SGMII0>;
+		phy-speed = <COMPHY_SPEED_1_25G>;
+	};
+	phy5 {
+		phy-type = <COMPHY_TYPE_UNCONNECTED>;
+	};
+};
+
+&cp0_mdio {
+	pinctrl-names = "default";
+	pinctrl-0 = <&cp0_mdio_pins>;
+	status = "okay";
+
+	eth2_lane1_88E1512: ethernet-phy2@1 {
+		reg = <1>;
+	};
+
+	eth1_lane3_88E1512: ethernet-phy1@0 {
+		reg = <0>;
+	};
+
+	eth0_lane4_88E1512P: ethernet-phy0@f {
+		reg = <0xF>;
+	};
+};
+
+&cp0_xmdio {
+	status = "disabled";
+	sfi_phy0: ethernet-phy@0 {
+		reg = <0>;
+	};
+
+	sfi_phy8: ethernet-phy@8 {
+		reg = <8>;
+	};
+};
+
+&cp0_usb3_0 {
+	status = "okay";
+};
+
+&cp0_utmi0 {
+	status = "okay";
+};
+
+&cp0_ethernet {
+	pinctrl-names = "default";
+	status = "okay";
+};
+
+&cp0_eth0 {
+	status = "okay";
+	phy-mode = "sgmii";
+	phy = <&eth0_lane4_88E1512P>;
+};
+
+&cp0_eth1 {
+	status = "okay";
+	phy-mode = "sgmii";
+	phy = <&eth1_lane3_88E1512>;
+};
+
+&cp0_eth2 {
+	status = "okay";
+	phy-mode = "sgmii";
+	phy = <&eth2_lane1_88E1512>;
+};
+
+&cp1_sata0 {
+	status = "disabled";
+};
+
+&cp1_usb3_0 {
+	current-limiter = <&cp1_reg_usb3_current_limiter0>;
+	/delete-property/ vbus-supply;
+	/delete-property/ vbus-disable-delay;
+	status = "okay";
+};
+
+&cp1_utmi0 {
+	status = "okay";
+};
+
+&cp1_gpio1 {
+	status = "disabled";
+};
+
+&cp1_pinctl {
+	/*
+	 * MPP Bus:
+	 * [0] VPD_ROM_WP		value 0
+	 * [1] USB_OC#			value 0
+	 * [2-3] I2C1			value 7
+	 * [4~6] WDT 			value 0
+	 * [7]   CP1 SFP ACT		value 0
+	 * [8]   CP1 SFP 1G_LED		value 0
+	 * [10]  CP1 SFP TX Disable	value 0
+	 * [12]  Load Default 		value 0
+	 * [13-16]  SPI1 		value 3
+	 * [27-28]  MDIO		value 8
+	 * [29-30]  MSS_I2C		value 8
+	 * [31]  unused			value 0
+	 * [32-62] = 0xff: Keep default CP1_shared_pins:
+	 */
+		/*   0    1    2    3    4    5    6    7    8    9 */
+	pin-func = < 0x0  0x0  0x7  0x7  0x0  0x0  0x0  0x0  0x0  0xff
+		     0x0  0xff 0x0  0x3  0x3  0x3  0x3  0xff 0xff 0xff
+		     0xff 0xff 0xff 0xff 0xff 0xff 0xff 0x8  0x8  0x8
+		     0x8  0x0  0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff
+		     0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff
+		     0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff 0xff
+		     0xff 0xff 0xff>;
+
+	cp1_mdio_pins: cp1-mdio-pins {
+		marvell,pins = < 27 28 >;
+		marvell,function = <8>;
+	};
+
+	cp1_i2c1_pins: cp1-i2c1-pins {
+		marvell,pins = < 2 3 >;
+		marvell,function = <7>;
+	};
+};
+
+&cp1_spi1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&cp1_spi1_pins>;
+	reg = <0x700680 0x50>,		/* control */
+	      <0x2000000 0x1000000>,	/* CS0 */
+	      <0 0xffffffff>;		/* CS1 */
+	status = "okay";
+
+	spi-flash@0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "jedec,spi-nor", "spi-flash";
+		reg = <0>;
+		spi-max-frequency = <108000000>;
+
+		partitions {
+			compatible = "fixed-partitions";
+			#address-cells = <1>;
+			#size-cells = <1>;
+
+			partition@0 {
+				label = "U-Boot";
+				reg = <0 0x200000>;
+			};
+		};
+	};
+};
+
+&cp1_i2c1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&cp1_i2c1_pins>;
+	status = "okay";
+};
+
+&cp1_ld_efuse0 {
+	status = "disabled";
+};
+
+&cp1_ld_efuse1 {
+	status = "disabled";
+};
+
+&cp1_comphy {
+	/*
+	 * CP1 Serdes Configuration:
+	 * Lane 0: SGMII11
+	 * Lane 1: SGMII12
+	 * Lane 2: USB HOST 0
+	 * Lane 3: unused
+	 * Lane 4: SGMII10
+	 * Lane 5: unused
+	 */
+	phy0 {
+		phy-type = <COMPHY_TYPE_SGMII1>;
+		phy-speed = <COMPHY_SPEED_1_25G>;
+	};
+	phy1 {
+		phy-type = <COMPHY_TYPE_SGMII2>;
+		phy-speed = <COMPHY_SPEED_1_25G>;
+	};
+	phy2 {
+		phy-type = <COMPHY_TYPE_USB3_HOST0>;
+	};
+	phy3 {
+		phy-type = <COMPHY_TYPE_UNCONNECTED>;
+	};
+	phy4 {
+		phy-type = <COMPHY_TYPE_SGMII0>;
+		phy-speed = <COMPHY_SPEED_1_25G>;
+	};
+	phy5 {
+		phy-type = <COMPHY_TYPE_UNCONNECTED>;
+	};
+};
+
+&cp1_mdio {
+	pinctrl-names = "default";
+	pinctrl-0 = <&cp1_mdio_pins>;
+	status = "okay";
+
+	cp1_eth0_lane4_88E1512: ethernet-phy0@0 {
+		reg = <0>;
+	};
+
+	cp1_eth1_lane0_88E1543: ethernet-phy0@1E {
+		reg = <0x1E>;
+	};
+
+	cp1_eth2_lane1_88E1543: ethernet-phy0@1C {
+		reg = <0x1C>;
+	};
+};
+
+&cp1_ethernet {
+	status = "okay";
+};
+
+/* 88E1543 */
+&cp1_eth0 {
+	status = "okay";
+	phy-mode = "sgmii";
+	phy = <&cp1_eth0_lane4_88E1512>;
+};
+
+/* 88E1543 */
+&cp1_eth1 {
+	status = "okay";
+	phy-mode = "sgmii";
+	phy = <&cp1_eth1_lane0_88E1543>;
+};
+
+/* 88E1512 */
+&cp1_eth2 {
+	status = "okay";
+	phy-mode = "sgmii";
+	phy = <&cp1_eth2_lane1_88E1543>;
+};

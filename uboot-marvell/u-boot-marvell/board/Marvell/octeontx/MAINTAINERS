@@ -1,0 +1,5 @@
+OCTEONTX BOARD
+M:	Sergey Temerkhanov <s.temerkhanov@gmail.com>
+M:	Suneel Garapati <sgarapati@caviumnetworks.com>
+S:	Maintained
+F:	board/Marvell/octeontx/

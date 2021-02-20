@@ -1,0 +1,23 @@
+// SPDX-License-Identifier: GPL-2.0+
+/*
+ * Copyright (C) 2018 Marvell International Ltd.
+ */
+
+#include "armada-8040.dtsi" /* include SoC device tree */
+#include "armada-8040-dev-info.dtsi"
+
+/ {
+	compatible = "marvell,armada-80x0-db", "marvell,armada-8040";
+	model = "DB-ARMADA-80x0";
+
+#define CP110_NUM				1
+#define SPI_DIRECT_BASE				(0xf9000000)
+
+	cp1 {
+		config-space {
+			ranges = <0x0 U64_TO_U32_H(CP110_BASE) U64_TO_U32_L(CP110_BASE) 0x2000000>,			/* internal regs */
+				 <0x2000000 U64_TO_U32_H(SPI_DIRECT_BASE) U64_TO_U32_L(SPI_DIRECT_BASE) 0x1000000>;	/* SPI1-DEV0 */
+		};
+	};
+#undef CP110_NUM
+};
