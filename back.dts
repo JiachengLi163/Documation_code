@@ -1,0 +1,645 @@
+/*
+ * Copyright (c) 2016 Fuzhou Rockchip Electronics Co., Ltd
+ *
+ * This file is dual-licensed: you can use it either under the terms
+ * of the GPL or the X11 license, at your option. Note that this dual
+ * licensing only applies to this file, and not this project as a
+ * whole.
+ *
+ *  a) This file is free software; you can redistribute it and/or
+ *     modify it under the terms of the GNU General Public License as
+ *     published by the Free Software Foundation; either version 2 of the
+ *     License, or (at your option) any later version.
+ *
+ *     This file is distributed in the hope that it will be useful,
+ *     but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *     GNU General Public License for more details.
+ *
+ * Or, alternatively,
+ *
+ *  b) Permission is hereby granted, free of charge, to any person
+ *     obtaining a copy of this software and associated documentation
+ *     files (the "Software"), to deal in the Software without
+ *     restriction, including without limitation the rights to use,
+ *     copy, modify, merge, publish, distribute, sublicense, and/or
+ *     sell copies of the Software, and to permit persons to whom the
+ *     Software is furnished to do so, subject to the following
+ *     conditions:
+ *
+ *     The above copyright notice and this permission notice shall be
+ *     included in all copies or substantial portions of the Software.
+ *
+ *     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ *     EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+ *     OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+ *     NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+ *     HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ *     WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ *     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+ *     OTHER DEALINGS IN THE SOFTWARE.
+ */
+#define DDR4_EN         1
+
+
+#define VBUS_HOST0_USE_GPIO_EN
+#define BIZERBA_BOARD   1
+/dts-v1/;
+
+#include "rk3399-excavator-sapphire.dtsi"
+#include "rk3399-linux.dtsi"
+#include "product.dtsi"
+
+#include <dt-bindings/input/input.h>
+
+
+#define GPIO_TEST	1
+
+	//test pannel power_en use gpio..
+	//kernel config CONFIG_BIZ_PANNEL_GPIO need set
+	#define VPD_VBUS_USE_GPIO_EN	1
+	#define EDP_EN_USE_GPIO_EN		1
+
+#define DISP_LEDS_TEST	0
+//-------------------------------------------------------------
+//B603
+//-------------------------------------------------------------
+
+
+/ {
+	model = "SAL1";
+	product_SDK = "2.3.0 github 73795337dde7cbc27735ff2f7e9fb328963eb2bd";
+	product_version = "SAL1-1";
+	compatible = "rockchip,rk3399-excavator-linux", "rockchip,rk3399";
+
+	fiq_debugger: fiq-debugger {
+		compatible = "rockchip,fiq-debugger";
+		rockchip,serial-id = <2>;
+		rockchip,signal-irq = <182>;
+		rockchip,wake-irq = <0>;
+		rockchip,irq-mode-enable = <1>;  /* If enable uart uses irq instead of fiq */
+		rockchip,baudrate = <1500000>;  /* Only 115200 and 1500000 */
+		pinctrl-names = "default";
+		pinctrl-0 = <&uart2c_xfer>;
+	};
+
+
+	gpio-keys {
+		compatible = "gpio-keys";
+		#address-cells = <1>;
+		#size-cells = <0>;
+		autorepeat;
+
+		pinctrl-names = "default";
+		pinctrl-0 = <&pwrbtn>;
+
+		button@0 {
+			gpios = <&gpio0 5 GPIO_ACTIVE_LOW>;
+			linux,code = <KEY_1>;				
+			label = "power key";
+			linux,input-type = <1>;
+			gpio-key,wakeup;
+			debounce-interval = <100>;
+		};
+	};
+
+	vccadc_ref: vccadc-ref {
+		compatible = "regulator-fixed";
+		regulator-name = "vcc1v8_sys";
+		regulator-always-on;
+		regulator-boot-on;
+		regulator-min-microvolt = <1800000>;
+		regulator-max-microvolt = <1800000>;
+	};
+
+	rga: rga@ff680000 {
+		compatible = "rockchip,rga2";
+		dev_mode = <1>;
+		reg = <0x0 0xff680000 0x0 0x1000>;
+		interrupts = <GIC_SPI 55 IRQ_TYPE_LEVEL_HIGH 0>;
+		clocks = <&cru ACLK_RGA>, <&cru HCLK_RGA>,<&cru SCLK_RGA_CORE>;
+		clock-names = "aclk_rga", "hclk_rga","clk_rga";
+		power-domains = <&power RK3399_PD_RGA>;
+		dma-coherent;
+		status = "okay";
+	};
+		
+};
+
+&i2s0{
+ status = "okay";
+};
+
+
+#if (DDR4_EN==1)
+&dmc {
+      status = "okay";
+      center-supply = <&vdd_center>;
+      system-status-freq = <
+            /*system status         freq(KHz)*/
+            SYS_STATUS_NORMAL       856000
+            SYS_STATUS_REBOOT       416000
+            SYS_STATUS_SUSPEND      416000
+            SYS_STATUS_VIDEO_1080P  416000
+            SYS_STATUS_VIDEO_4K     856000
+            SYS_STATUS_VIDEO_4K_10B 856000
+            SYS_STATUS_PERFORMANCE  856000
+            SYS_STATUS_BOOST        856000
+            SYS_STATUS_DUALVIEW     856000
+            SYS_STATUS_ISP          856000
+      >;
+      vop-bw-dmc-freq = <
+      /* min_bw(MB/s) max_bw(MB/s) freq(KHz) */
+            0       577      416000
+            578     99999    856000
+      >;
+      auto-min-freq = <416000>;
+      auto-freq-en = <0>;
+};
+
+&dmc_opp_table {
+      compatible = "operating-points-v2";
+
+      opp-200000000 {
+            opp-hz = /bits/ 64 <200000000>;
+            opp-microvolt = <900000>;
+            status = "disabled";
+      };
+      opp-300000000 {
+            opp-hz = /bits/ 64 <300000000>;
+            opp-microvolt = <900000>;
+            status = "disabled";
+      };
+      opp-400000000 {
+            opp-hz = /bits/ 64 <400000000>;
+            opp-microvolt = <900000>;
+            status = "disabled";
+      };
+      opp-416000000 {
+            opp-hz = /bits/ 64 <416000000>;
+            opp-microvolt = <900000>;
+      };
+      opp-528000000 {
+            opp-hz = /bits/ 64 <528000000>;
+            opp-microvolt = <900000>;
+            status = "disabled";
+      };
+      opp-600000000 {
+            opp-hz = /bits/ 64 <600000000>;
+            opp-microvolt = <900000>;
+            status = "disabled";
+      };
+      opp-800000000 {
+            opp-hz = /bits/ 64 <800000000>;
+            opp-microvolt = <900000>;
+            status = "disabled";
+      };
+      opp-856000000 {
+            opp-hz = /bits/ 64 <856000000>;
+            opp-microvolt = <900000>;
+      };
+      opp-928000000 {
+            opp-hz = /bits/ 64 <928000000>;
+            opp-microvolt = <900000>;
+            status = "disabled";
+      };
+      opp-1056000000 {
+            opp-hz = /bits/ 64 <1056000000>;
+            opp-microvolt = <900000>;
+            status = "disabled";
+      };
+};
+#endif
+
+
+#if 1
+//fix hyper board vdd issue
+&pwm2 {
+ status = "okay";
+};
+
+&vdd_log {
+ status = "okay";
+};
+
+#endif
+
+
+&saradc {
+	vref-supply = <&vccadc_ref>;
+};
+
+&vpu {
+	status = "okay";
+	/* 0 means ion, 1 means drm */
+	//allocator = <0>;
+};
+
+&rkvdec {
+	status = "okay";
+	/* 0 means ion, 1 means drm */
+	//allocator = <0>;
+};
+
+&i2c0 {
+	status = "okay";
+	//0x1B PMIC RK808-D
+};
+
+&i2c6 {
+	status = "okay";
+	i2c-scl-rising-time-ns = <168>;
+	i2c-scl-falling-time-ns = <4>;
+	clock-frequency = <100000>;
+};
+
+&iep {
+	status = "okay";
+};
+
+&iep_mmu {
+	status = "okay";
+};
+
+&pcie_phy {
+	status = "disabled";
+};
+
+&pcie0 {
+	status = "okay";
+};
+
+&vopb {
+	status = "okay";
+	assigned-clocks = <&cru DCLK_VOP0_DIV>;
+	assigned-clock-parents = <&cru PLL_VPLL>;
+};
+
+&vopb_mmu {
+	status = "okay";
+};
+
+&vopl {
+	status = "okay";
+	assigned-clocks = <&cru DCLK_VOP1_DIV>;
+	assigned-clock-parents = <&cru PLL_CPLL>;
+};
+
+&vopl_mmu {
+	status = "okay";
+};
+
+&pinctrl {
+
+//- 1 input pin from power button
+	buttons {
+		pwrbtn: pwrbtn {
+			rockchip,pins = <0 5 RK_FUNC_GPIO &pcfg_pull_up>;
+		};
+	};
+
+//- power_led	
+	gpio-leds {
+		leds_gpio: leds-gpio {
+			rockchip,pins = <4 30 RK_FUNC_GPIO &pcfg_pull_up>;	/* GPIO4_D6_POWER_LED */		
+		};
+	};
+
+	gpio_oem_pins: gpio-oem-pins {
+			rockchip,pins =
+	//			<0 9 RK_FUNC_GPIO &pcfg_pull_none>, //bt_test	=		<&gpio0 9 (0x80)>;
+
+
+				<2 2 RK_FUNC_GPIO &pcfg_pull_none>,		/* GPIO2_A2_BTN_KILL */	
+				<2 11 RK_FUNC_GPIO &pcfg_pull_none>, 	/* GPIO2_B3_BTN_SAVE */
+
+				<0 1 RK_FUNC_GPIO &pcfg_pull_none>, 	/* GPIO0_A1_SDMMC0_PWR */
+				<0 3 RK_FUNC_GPIO &pcfg_pull_none>, 	/* GPIO0_A3_WIFI_HOST_WAKE_L */
+				<0 4 RK_FUNC_GPIO &pcfg_pull_none>, 	/* GPIO0_A4_BT_HOST_WAKE_L */
+
+				<1 13 RK_FUNC_GPIO &pcfg_pull_up>;     /* GPIO1_B5_LCD_EN */	
+	};
+};
+
+
+
+//------------------------------------
+//display
+//------------------------------------
+/ {
+	panel: panel {
+		compatible = "simple-panel";
+		status="okay";
+		backlight = <&backlight>;
+		//power-supply = <&vcc_lcd>;
+
+		prepare-delay-ms = <20>;
+		enable-delay-ms = <20>;
+		ports {
+			panel_in: endpoint {
+				remote-endpoint = <&edp_out>;
+			};
+		};
+	};
+
+	hdmi_sound: hdmi-sound {
+		status = "okay";
+		compatible = "simple-audio-card";
+		simple-audio-card,format = "i2s";
+		simple-audio-card,mclk-fs = <256>;
+		simple-audio-card,name = "rockchip,hdmi";
+
+		simple-audio-card,cpu {
+			sound-dai = <&i2s2>;
+		};
+		simple-audio-card,codec {
+			sound-dai = <&hdmi>;
+		};
+	};
+
+	rt5651_sound: rt5651-sound {
+		status = "disabled";
+	};
+
+ 	dp_sound: dp-sound {
+  		status = "disabled";
+ 	};
+
+
+	vpd0: vpd0 {           
+                  compatible = "linux,extcon-pd-virtual";
+      
+#if (VPD_VBUS_USE_GPIO_EN==0)
+                  vbus-5v-gpios = <&gpio1 13 GPIO_ACTIVE_HIGH>;
+#endif
+                  /* 0: positive, 1: negative*/
+                  vpd,init-flip = <0>;//0
+                  /* 0: u2, 1: u3*/
+                  vpd,init-ss = <0>;//0
+                  /* 0: dfp, 1: ufp, 2: dp 3: dp/ufp */
+                  vpd,init-mode = <2>;//3
+            };
+};
+
+
+&backlight {
+	status = "okay";
+	//enable-gpios = <&gpio1 24 GPIO_ACTIVE_HIGH>;
+	enable-gpios = <&gpio4 29 GPIO_ACTIVE_HIGH>;
+};
+
+&display_subsystem {
+	status = "okay";
+};
+
+&route_edp {
+	status = "disabled";
+};
+
+&edp {
+	status = "disabled";
+	ports {
+		edp_out: endpoint {
+			reg = <0>;
+			remote-endpoint = <&panel_in>;
+		};
+	};
+};
+
+&edp_in_vopb {
+	//status = "okay";
+	status = "disabled";
+};
+
+&route_edp {
+	connect = <&vopb_out_edp>;
+	status = "disabled";
+	logo,mode = "center";
+};
+
+&route_hdmi {	
+	status = "okay";
+};
+
+&hdmi {
+	status = "okay";
+};
+
+
+
+#if (BIZERBA_BOARD==1)
+/* Rockchip-RK3399-Developer-Guide-Linux4.4-USB-DTS-CN.pdf */
+/* 5.3 Type-C to Type-A USB 2.0 OTG mode DTS and Support
+DP 4 Lane */
+/* Disable Type-C0 USB 3.0 PHY */
+&tcphy0 {
+	extcon = <&vpd0>;
+	status = "okay";
+};
+/* Enable Type-C0 USB 2.0 PHY */
+&u2phy0 {
+	status = "okay";
+	u2phy0_otg: otg-port {
+		/* No need to configure Vbus regulator properties */
+		status = "okay";
+	};
+	u2phy0_host: host-port {
+		phy-supply = <&vcc5v0_host>;
+		status = "okay";
+	};
+
+};
+
+/* Configurate and Enable Type-C0 USB 3.0 Controller
+*/
+/* Configure USB controller */
+&usbdrd3_0 {
+	/* extcon is not necessary. If the micro OTG interface is used, it needs to be configured. If using Type-A interface, no configuration */
+	extcon = <&u2phy0>;
+	status = "okay";
+};
+&usbdrd_dwc3_0 {
+	dr_mode = "otg";			/* Configured as otg mode, support switching between peripheral and host */
+	maximum-speed = "high-speed";		/* Configure up to support high-speed*/
+	phys = <&u2phy0_otg>, <&tcphy0_usb3>;	/* U2 and U3 PHY must be configured */
+	phy-names = "usb2-phy", "usb3-phy";
+	status = "okay";
+};
+
+
+#endif
+
+&cdn_dp {
+	status = "disabled";
+    extcon = <&vpd0>;
+    dp_vop_sel = <1>;
+	//phys = <&tcphy0_dp>;
+};
+
+&dp_in_vopb {
+	status = "disabled";
+};
+
+&dp_in_vopl {
+	status = "disabled";
+};
+//------------------------------------
+
+
+&i2c7 {
+	status = "okay";
+};
+
+//buzzer use
+&pwm3 {
+ status = "okay";
+};
+
+&sdhci {
+	bus-width = <8>;
+	mmc-hs400-1_8v;
+	min-frequency =  <5000000>;
+	max-frequency = <200000000>;
+	supports-emmc;
+	non-removable;
+	keep-power-in-suspend;
+	mmc-hs400-enhanced-strobe;
+	status = "okay";
+};
+
+#define SDIO_MAX_CLK 180000000//160000000
+&sdio0 {
+	max-frequency = <SDIO_MAX_CLK>;
+	clock-frequency = <SDIO_MAX_CLK>;
+	clock-freq-min-max = <200000 SDIO_MAX_CLK>;
+	status = "okay";
+	
+};
+
+&gmac {
+	status = "okay";
+};
+
+
+&i2c1 {
+	status = "okay";
+	i2c-scl-rising-time-ns = <100>;
+	i2c-scl-falling-time-ns = <4>;
+	//clock-frequency = <100000>;	
+	clock-frequency = <400000>;
+	//0x50 EEPROM CAT24C512WI
+    eeprom@50 {
+    	compatible = "at,24c512";
+        reg = <0x50>;
+        #address-cells = <1>;
+        #size-cells = <0>;        
+        pagesize = <128>;
+        size = <32768>;
+        address-width = <16>;        
+    };	
+ 
+};
+
+&i2c2 {
+	status = "okay";
+	i2c-scl-rising-time-ns = <100>;
+	i2c-scl-falling-time-ns = <4>;
+	clock-frequency = <100000>;
+	//	MCU  ATSAMD21G16B
+#if 0
+	//0x54 EEPROM 24LC01B
+	eeprom@54 {
+		compatible = "at,24c64";
+		reg = <0x54>;
+	};	
+#endif
+#if 1
+	biz_mcu@15 {
+		compatible = "biz_mcu";
+		reg = <0x15>;
+		
+	};	
+#endif
+};
+
+
+
+&i2c4 {
+	status = "okay";
+	i2c-scl-rising-time-ns = <168>;
+	i2c-scl-falling-time-ns = <4>;
+	clock-frequency = <100000>;
+
+	//0x68 RTC BQ32000D
+	rtc@68 {
+		compatible = "rtc,bq32k";
+		reg = <0x68>;
+		//clock-frequency = <400000>;
+	};
+
+#if LM73_EN
+	//0x48 Temp sensor 
+	lm73: lm73@48 {
+		compatible = "national,lm73";
+		reg = <0x48>;//0x49
+
+		//interrupts = <28 0x4>;
+		//interrupt-parent = <&gpio4>;
+		//pinctrl-names = "default";
+		//pinctrl-0 = <&pinctrl_lm73>;
+	};
+#endif
+
+	fusb0: fusb30x@22 {
+		status = "disabled";
+	}; 	
+};
+
+
+//-------------------------------------------------------------
+//F735 RFB
+//-------------------------------------------------------------
+/ {
+
+	wireless-wlan {
+		compatible = "wlan-platdata";
+		rockchip,grf = <&grf>;
+		wifi_chip_type = "ap6398s";
+		//wifi_chip_type = "ap6354";
+		sdio_vref = <1800>;
+		pinctrl-0 = <&wlan_pen>;
+		WIFI,host_wake_irq = <&gpio0 3 GPIO_ACTIVE_HIGH>; /* GPIO0_a3 */
+		status = "okay";
+    };
+
+	wireless-bluetooth {
+		compatible = "bluetooth-platdata";
+		clocks = <&rk808 1>;
+		clock-names = "ext_clock";
+
+		uart_rts_gpios = <&gpio2 19 1>;
+		pinctrl-names = "default", "rts_gpio";
+		pinctrl-0 = <&uart0_rts>;
+		pinctrl-1 = <&uart0_gpios>;
+
+		//BT,reset_gpio = <&gpio0 9 0>; //not use gpio0 9, reset_gpio will case 1.5v error..
+		BT,reset_gpio = <&gpio0 8 0>;
+		BT,wake_gpio = <&gpio2 26 0>;
+		BT,wake_host_irq = <&gpio0 4 0>;
+		status = "okay";
+		//status = "disabled";	
+	};
+
+		
+};
+
+
+&pinctrl {
+	wireless-wlan {
+		wlan_pen: wlan-pen {
+			rockchip,pins =
+				<2 28 RK_FUNC_GPIO &pcfg_pull_down>;		//GPIO2_D4
+		};
+	};
+};
+//-------------------------------------------------------------
