@@ -111,7 +111,7 @@ static int dw_wdt_set_timeout(struct watchdog_device *wdd, unsigned int top_s)
 			top_val = i;
 			break;
 		}
-
+	printk(" test: %s %d top_val %d\n", __func__, __LINE__, top_val);
 	/*
 	 * Set the new value in the watchdog.  Some versions of dw_wdt
 	 * have have TOPINIT in the TIMEOUT_RANGE register (as per
@@ -122,7 +122,7 @@ static int dw_wdt_set_timeout(struct watchdog_device *wdd, unsigned int top_s)
 	       dw_wdt->regs + WDOG_TIMEOUT_RANGE_REG_OFFSET);
 
 	wdd->timeout = dw_wdt_top_in_seconds(dw_wdt, top_val);
-
+	printk(" test: %s %d wdd->timeout %d\n", __func__, __LINE__, wdd->timeout);
 	return 0;
 }
 
@@ -141,10 +141,12 @@ static int dw_wdt_start(struct watchdog_device *wdd)
 {
 	struct dw_wdt *dw_wdt = to_dw_wdt(wdd);
 
+	printk(" test: %s %d timeout-sec %d\n", __func__, __LINE__, wdd->timeout);
 	dw_wdt_set_timeout(wdd, wdd->timeout);
 	dw_wdt_ping(&dw_wdt->wdd);
 	dw_wdt_arm_system_reset(dw_wdt);
-
+	//wdd->timeout = 90;
+	printk(" test: %s %d timeout-sec %d\n", __func__, __LINE__, wdd->timeout);
 	return 0;
 }
 
@@ -283,7 +285,7 @@ static int dw_wdt_drv_probe(struct platform_device *pdev)
 		ret = -EINVAL;
 		goto out_disable_clk;
 	}
-
+    printk("%s %d rete:%ld\n", __func__, __LINE__, dw_wdt->rate);
 	/*
 	 * Request APB clock if device is configured with async clocks mode.
 	 * In this case both tclk and pclk clocks are supposed to be specified.
@@ -341,7 +343,7 @@ static int dw_wdt_drv_probe(struct platform_device *pdev)
 	ret = watchdog_register_device(wdd);
 	if (ret)
 		goto out_disable_pclk;
-
+	printk(" test: %s %d timeout-sec %d\n", __func__, __LINE__, wdd->timeout);
 	return 0;
 
 out_disable_pclk:
@@ -387,3 +389,4 @@ module_platform_driver(dw_wdt_driver);
 MODULE_AUTHOR("Jamie Iles");
 MODULE_DESCRIPTION("Synopsys DesignWare Watchdog Driver");
 MODULE_LICENSE("GPL");
+

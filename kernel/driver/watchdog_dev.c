@@ -169,6 +169,7 @@ static int __watchdog_ping(struct watchdog_device *wdd)
 	}
 
 	wd_data->last_hw_keepalive = now;
+	printk(" test: %s %d timeout-sec %d\n", __func__, __LINE__, wdd->timeout);
 
 	if (wdd->ops->ping)
 		err = wdd->ops->ping(wdd);  /* ping the watchdog */
@@ -202,6 +203,8 @@ static int watchdog_ping(struct watchdog_device *wdd)
 	set_bit(_WDOG_KEEPALIVE, &wd_data->status);
 
 	wd_data->last_keepalive = ktime_get();
+	printk(" test: %s %d timeout-sec %d\n", __func__, __LINE__, wdd->timeout);
+
 	return __watchdog_ping(wdd);
 }
 
@@ -217,8 +220,10 @@ static void watchdog_ping_work(struct kthread_work *work)
 	struct watchdog_core_data *wd_data;
 
 	wd_data = container_of(work, struct watchdog_core_data, work);
-
+	printk(" before: %s %d timeout-sec %d\n", __func__, __LINE__, wd_data->wdd->timeout);
 	mutex_lock(&wd_data->lock);
+	printk(" test: %s %d timeout-sec %d\n", __func__, __LINE__, wd_data->wdd->timeout);
+
 	if (watchdog_worker_should_ping(wd_data))
 		__watchdog_ping(wd_data->wdd);
 	mutex_unlock(&wd_data->lock);
@@ -257,6 +262,8 @@ static int watchdog_start(struct watchdog_device *wdd)
 	set_bit(_WDOG_KEEPALIVE, &wd_data->status);
 
 	started_at = ktime_get();
+	printk(" test: %s %d timeout-sec %d\n", __func__, __LINE__, wdd->timeout);
+
 	if (watchdog_hw_running(wdd) && wdd->ops->ping)
 		err = wdd->ops->ping(wdd);
 	else
@@ -372,7 +379,7 @@ static int watchdog_set_timeout(struct watchdog_device *wdd,
 		if (wdd->pretimeout >= wdd->timeout)
 			wdd->pretimeout = 0;
 	}
-
+	printk(" test: %s %d timeout-sec %d\n", __func__, __LINE__, wdd->timeout);
 	watchdog_update_worker(wdd);
 
 	return err;
@@ -935,6 +942,7 @@ static int watchdog_cdev_register(struct watchdog_device *wdd)
 {
 	struct watchdog_core_data *wd_data;
 	int err;
+	printk(" test: %s %d timeout-sec %d\n", __func__, __LINE__, wdd->timeout);
 
 	wd_data = kzalloc(sizeof(struct watchdog_core_data), GFP_KERNEL);
 	if (!wd_data)
@@ -959,6 +967,8 @@ static int watchdog_cdev_register(struct watchdog_device *wdd)
 	dev_set_name(&wd_data->dev, "watchdog%d", wdd->id);
 
 	kthread_init_work(&wd_data->work, watchdog_ping_work);
+	printk(" before: %s %d timeout-sec %d\n", __func__, __LINE__, wdd->timeout);
+
 	hrtimer_init(&wd_data->timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	wd_data->timer.function = watchdog_timer_expired;
 
@@ -1012,6 +1022,7 @@ static int watchdog_cdev_register(struct watchdog_device *wdd)
 			pr_info("watchdog%d running and kernel based pre-userspace handler disabled\n",
 				wdd->id);
 	}
+	printk(" before: %s %d timeout-sec %d\n", __func__, __LINE__, wd_data->wdd->timeout);
 
 	return 0;
 }
@@ -1062,6 +1073,7 @@ static void watchdog_cdev_unregister(struct watchdog_device *wdd)
 int watchdog_dev_register(struct watchdog_device *wdd)
 {
 	int ret;
+	printk(" test: %s %d timeout-sec %d\n", __func__, __LINE__, wdd->timeout);
 
 	ret = watchdog_cdev_register(wdd);
 	if (ret)
@@ -1070,6 +1082,15 @@ int watchdog_dev_register(struct watchdog_device *wdd)
 	ret = watchdog_register_pretimeout(wdd);
 	if (ret)
 		watchdog_cdev_unregister(wdd);
+	printk("%s %d %d\n",__func__, __LINE__, wdd->timeout);
+    set_bit(WDOG_HW_RUNNING, &wdd->status);
+    wdd->ops->start(wdd);
+	wdd->wd_data->last_keepalive = ktime_get();
+	wdd->wd_data->last_hw_keepalive = ktime_get();
+	printk("%s %d %d\n",__func__, __LINE__, wdd->timeout);
+	printk("%s %d watchdog ping time worker is %llu", __func__, __LINE__, wdd->wd_data->last_keepalive);
+	printk("%s %d watchdog hw ping time worker is %llu", __func__, __LINE__, wdd->wd_data->last_hw_keepalive);
+    watchdog_update_worker(wdd);
 
 	return ret;
 }
@@ -1144,3 +1165,4 @@ module_param(handle_boot_enabled, bool, 0444);
 MODULE_PARM_DESC(handle_boot_enabled,
 	"Watchdog core auto-updates boot enabled watchdogs before userspace takes over (default="
 	__MODULE_STRING(IS_ENABLED(CONFIG_WATCHDOG_HANDLE_BOOT_ENABLED)) ")");
+
