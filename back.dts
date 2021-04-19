@@ -103,6 +103,26 @@
 		};
 	};
 
+	vcc5v0_typec1: vcc5v0-typec1-regulator {
+		compatible = "regulator-fixed";
+		enable-active-high;
+		gpio = <&gpio4 25 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&host_vcc5v0>;
+		regulator-name= "vcc5v0_all_20";
+		regulator-always-on;
+	};
+
+	vcc5v0_all_20: vcc5v0-host-20-regulator {
+		compatible = "regulator-fixed";
+		enable-active-high;
+		gpio = <&gpio1 18 GPIO_ACTIVE_HIGH>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&host1_20_vbus_drv>;
+		regulator-name= "vcc5v0_all_20";
+		regulator-always-on;
+	};
+
 	vccadc_ref: vccadc-ref {
 		compatible = "regulator-fixed";
 		regulator-name = "vcc1v8_sys";
@@ -305,6 +325,16 @@
 		};
 	};
 
+	host1_usb_2 {
+		host1_20_vbus_drv:host1_20_vbus-drv {
+			rockchip,pins = <1 18 RK_FUNC_GPIO &pcfg_pull_none>;	/* GPIO1_C2_ */
+		};
+
+		host_vcc5v0: vcc5v0-host {
+			rockchip,pins = <4 25 RK_FUNC_GPIO &pcfg_pull_up>;
+		};
+	};
+
 	gpio_oem_pins: gpio-oem-pins {
 			rockchip,pins =
 	//			<0 9 RK_FUNC_GPIO &pcfg_pull_none>, //bt_test	=		<&gpio0 9 (0x80)>;
@@ -425,49 +455,11 @@
 	status = "okay";
 };
 
-
-
-#if (BIZERBA_BOARD==1)
-/* Rockchip-RK3399-Developer-Guide-Linux4.4-USB-DTS-CN.pdf */
-/* 5.3 Type-C to Type-A USB 2.0 OTG mode DTS and Support
-DP 4 Lane */
-/* Disable Type-C0 USB 3.0 PHY */
-&tcphy0 {
-	extcon = <&vpd0>;
-	status = "okay";
-};
-/* Enable Type-C0 USB 2.0 PHY */
-&u2phy0 {
-	status = "okay";
-	u2phy0_otg: otg-port {
-		/* No need to configure Vbus regulator properties */
-		status = "okay";
-	};
-	u2phy0_host: host-port {
-		phy-supply = <&vcc5v0_host>;
-		status = "okay";
-	};
-
-};
-
-/* Configurate and Enable Type-C0 USB 3.0 Controller
-*/
-/* Configure USB controller */
-&usbdrd3_0 {
-	/* extcon is not necessary. If the micro OTG interface is used, it needs to be configured. If using Type-A interface, no configuration */
-	extcon = <&u2phy0>;
-	status = "okay";
-};
-&usbdrd_dwc3_0 {
-	dr_mode = "otg";			/* Configured as otg mode, support switching between peripheral and host */
-	maximum-speed = "high-speed";		/* Configure up to support high-speed*/
-	phys = <&u2phy0_otg>, <&tcphy0_usb3>;	/* U2 and U3 PHY must be configured */
-	phy-names = "usb2-phy", "usb3-phy";
+&u2phy1_host {
+	phy-supply = <&vcc5v0_all_20>;
 	status = "okay";
 };
 
-
-#endif
 
 &cdn_dp {
 	status = "disabled";
