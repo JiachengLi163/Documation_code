@@ -39,7 +39,7 @@
  *     FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  *     OTHER DEALINGS IN THE SOFTWARE.
  */
-#define DDR4_EN         1
+//#define DDR4_EN         1
 
 
 #define VBUS_HOST0_USE_GPIO_EN
@@ -309,109 +309,6 @@
 	status = "okay";
 };
 
-&pinctrl {
-
-//- 1 input pin from power button
-	buttons {
-		pwrbtn: pwrbtn {
-			rockchip,pins = <0 5 RK_FUNC_GPIO &pcfg_pull_up>;
-		};
-	};
-
-//- power_led	
-	gpio-leds {
-		leds_gpio: leds-gpio {
-			rockchip,pins = <4 30 RK_FUNC_GPIO &pcfg_pull_up>;	/* GPIO4_D6_POWER_LED */		
-		};
-	};
-
-	host1_usb_2 {
-		host1_20_vbus_drv:host1_20_vbus-drv {
-			rockchip,pins = <1 18 RK_FUNC_GPIO &pcfg_pull_none>;	/* GPIO1_C2_ */
-		};
-
-		host_vcc5v0: vcc5v0-host {
-			rockchip,pins = <4 25 RK_FUNC_GPIO &pcfg_pull_up>;
-		};
-	};
-
-	gpio_oem_pins: gpio-oem-pins {
-			rockchip,pins =
-	//			<0 9 RK_FUNC_GPIO &pcfg_pull_none>, //bt_test	=		<&gpio0 9 (0x80)>;
-
-
-				<2 2 RK_FUNC_GPIO &pcfg_pull_none>,		/* GPIO2_A2_BTN_KILL */	
-				<2 11 RK_FUNC_GPIO &pcfg_pull_none>, 	/* GPIO2_B3_BTN_SAVE */
-
-				<0 1 RK_FUNC_GPIO &pcfg_pull_none>, 	/* GPIO0_A1_SDMMC0_PWR */
-				<0 3 RK_FUNC_GPIO &pcfg_pull_none>, 	/* GPIO0_A3_WIFI_HOST_WAKE_L */
-				<0 4 RK_FUNC_GPIO &pcfg_pull_none>, 	/* GPIO0_A4_BT_HOST_WAKE_L */
-
-				<1 13 RK_FUNC_GPIO &pcfg_pull_up>;     /* GPIO1_B5_LCD_EN */	
-	};
-};
-
-
-
-//------------------------------------
-//display
-//------------------------------------
-/ {
-	panel: panel {
-		compatible = "simple-panel";
-		status="okay";
-		backlight = <&backlight>;
-		//power-supply = <&vcc_lcd>;
-
-		prepare-delay-ms = <20>;
-		enable-delay-ms = <20>;
-		ports {
-			panel_in: endpoint {
-				remote-endpoint = <&edp_out>;
-			};
-		};
-	};
-
-	hdmi_sound: hdmi-sound {
-		status = "okay";
-		compatible = "simple-audio-card";
-		simple-audio-card,format = "i2s";
-		simple-audio-card,mclk-fs = <256>;
-		simple-audio-card,name = "rockchip,hdmi";
-
-		simple-audio-card,cpu {
-			sound-dai = <&i2s2>;
-		};
-		simple-audio-card,codec {
-			sound-dai = <&hdmi>;
-		};
-	};
-
-	rt5651_sound: rt5651-sound {
-		status = "disabled";
-	};
-
- 	dp_sound: dp-sound {
-  		status = "disabled";
- 	};
-
-
-	vpd0: vpd0 {           
-                  compatible = "linux,extcon-pd-virtual";
-      
-#if (VPD_VBUS_USE_GPIO_EN==0)
-                  vbus-5v-gpios = <&gpio1 13 GPIO_ACTIVE_HIGH>;
-#endif
-                  /* 0: positive, 1: negative*/
-                  vpd,init-flip = <0>;//0
-                  /* 0: u2, 1: u3*/
-                  vpd,init-ss = <0>;//0
-                  /* 0: dfp, 1: ufp, 2: dp 3: dp/ufp */
-                  vpd,init-mode = <2>;//3
-            };
-};
-
-
 &backlight {
 	status = "okay";
 	//enable-gpios = <&gpio1 24 GPIO_ACTIVE_HIGH>;
@@ -422,19 +319,78 @@
 	status = "okay";
 };
 
+&dsi {
+	status = "okay";
+	panel@0 {
+		compatible = "simple-panel-dsi";
+		reg = <0>;
+		backlight = <&backlight>;
+		enable-gpios = <&gpio1 13 GPIO_ACTIVE_HIGH>;
+
+		dsi,flags = <(MIPI_DSI_MODE_VIDEO | MIPI_DSI_MODE_VIDEO_BURST | MIPI_DSI_MODE_VIDEO_SYNC_PULSE)>;
+		dsi,format = <MIPI_DSI_FMT_RGB888>;
+		dsi,lanes = <4>;
+		//pinctrl-names = "default";
+		//pinctrl-0 = <&lcd_sw_gpios>;
+
+		display-timings {
+			native-mode = <&timing0>;
+			timing0: timing-default {
+				clock-frequency = <51200000>;
+				hactive = <1024>;
+				vactive = <600>;
+				hback-porch = <80>;
+				hfront-porch = <220>;
+				vback-porch = <10>;
+				vfront-porch = <20>;
+				hsync-len = <20>;
+				vsync-len = <5>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <0>;
+				pixelclk-active = <0>;
+			};
+			/* 10.1 inches 14AXLCDG101SN1 */
+			timing1: timing-14axlcdg101sn1 {
+				clock-frequency = <51200000>;
+				hactive = <1024>;
+				vactive = <600>;
+				hback-porch = <80>;
+				hfront-porch = <220>;
+				vback-porch = <10>;
+				vfront-porch = <20>;
+				hsync-len = <20>;
+				vsync-len = <5>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <0>;
+				pixelclk-active = <0>;
+			};
+			/* 15.6 inches NT156FHM-N61 */
+			timing2: timing-nt156fhmn61 {
+				clock-frequency = <148500000>;
+				hactive = <1920>;
+				vactive = <1080>;
+				hback-porch = <32>;
+				hfront-porch = <230>;
+				vback-porch = <3>;
+				vfront-porch = <21>;
+				hsync-len = <48>;
+				vsync-len = <6>;
+				hsync-active = <0>;
+				vsync-active = <0>;
+				de-active = <0>;
+				pixelclk-active = <0>;
+			};
+		};
+	};
+};
+
+
 &route_edp {
 	status = "disabled";
 };
 
-&edp {
-	status = "disabled";
-	ports {
-		edp_out: endpoint {
-			reg = <0>;
-			remote-endpoint = <&panel_in>;
-		};
-	};
-};
 
 &edp_in_vopb {
 	//status = "okay";
@@ -460,31 +416,8 @@
 	status = "okay";
 };
 
-
-&cdn_dp {
-	status = "disabled";
-    extcon = <&vpd0>;
-    dp_vop_sel = <1>;
-	//phys = <&tcphy0_dp>;
-};
-
-&dp_in_vopb {
-	status = "disabled";
-};
-
-&dp_in_vopl {
-	status = "disabled";
-};
-//------------------------------------
-
-
 &i2c7 {
 	status = "okay";
-};
-
-//buzzer use
-&pwm3 {
- status = "okay";
 };
 
 &sdhci {
@@ -508,10 +441,10 @@
 	
 };
 
+/*enable Ethernet*/
 &gmac {
 	status = "okay";
 };
-
 
 &i2c1 {
 	status = "okay";
@@ -588,50 +521,44 @@
 };
 
 
-//-------------------------------------------------------------
-//F735 RFB
-//-------------------------------------------------------------
-/ {
-
-	wireless-wlan {
-		compatible = "wlan-platdata";
-		rockchip,grf = <&grf>;
-		wifi_chip_type = "ap6398s";
-		//wifi_chip_type = "ap6354";
-		sdio_vref = <1800>;
-		pinctrl-0 = <&wlan_pen>;
-		WIFI,host_wake_irq = <&gpio0 3 GPIO_ACTIVE_HIGH>; /* GPIO0_a3 */
-		status = "okay";
-    };
-
-	wireless-bluetooth {
-		compatible = "bluetooth-platdata";
-		clocks = <&rk808 1>;
-		clock-names = "ext_clock";
-
-		uart_rts_gpios = <&gpio2 19 1>;
-		pinctrl-names = "default", "rts_gpio";
-		pinctrl-0 = <&uart0_rts>;
-		pinctrl-1 = <&uart0_gpios>;
-
-		//BT,reset_gpio = <&gpio0 9 0>; //not use gpio0 9, reset_gpio will case 1.5v error..
-		BT,reset_gpio = <&gpio0 8 0>;
-		BT,wake_gpio = <&gpio2 26 0>;
-		BT,wake_host_irq = <&gpio0 4 0>;
-		status = "okay";
-		//status = "disabled";	
-	};
-
-		
-};
-
-
 &pinctrl {
-	wireless-wlan {
-		wlan_pen: wlan-pen {
-			rockchip,pins =
-				<2 28 RK_FUNC_GPIO &pcfg_pull_down>;		//GPIO2_D4
+
+//- 1 input pin from power button
+	buttons {
+		pwrbtn: pwrbtn {
+			rockchip,pins = <0 5 RK_FUNC_GPIO &pcfg_pull_up>;
 		};
 	};
+
+//- power_led
+	gpio-leds {
+		leds_gpio: leds-gpio {
+			rockchip,pins = <4 30 RK_FUNC_GPIO &pcfg_pull_up>;	/* GPIO4_D6_POWER_LED */
+		};
+	};
+
+	host1_usb_2 {
+		host1_20_vbus_drv:host1_20_vbus-drv {
+			rockchip,pins = <1 18 RK_FUNC_GPIO &pcfg_pull_none>;	/* GPIO1_C2_ */
+		};
+
+		host_vcc5v0: vcc5v0-host {
+			rockchip,pins = <4 25 RK_FUNC_GPIO &pcfg_pull_up>;
+		};
+	};
+
+	gpio_oem_pins: gpio-oem-pins {
+			rockchip,pins =
+	//			<0 9 RK_FUNC_GPIO &pcfg_pull_none>, //bt_test	=		<&gpio0 9 (0x80)>;
+
+
+				<2 2 RK_FUNC_GPIO &pcfg_pull_none>,		/* GPIO2_A2_BTN_KILL */
+				<2 11 RK_FUNC_GPIO &pcfg_pull_none>, 	/* GPIO2_B3_BTN_SAVE */
+
+				<0 1 RK_FUNC_GPIO &pcfg_pull_none>, 	/* GPIO0_A1_SDMMC0_PWR */
+				<0 3 RK_FUNC_GPIO &pcfg_pull_none>, 	/* GPIO0_A3_WIFI_HOST_WAKE_L */
+				<0 4 RK_FUNC_GPIO &pcfg_pull_none>, 	/* GPIO0_A4_BT_HOST_WAKE_L */
+
+				<1 13 RK_FUNC_GPIO &pcfg_pull_up>;     /* GPIO1_B5_LCD_EN */
+	};
 };
-//-------------------------------------------------------------
